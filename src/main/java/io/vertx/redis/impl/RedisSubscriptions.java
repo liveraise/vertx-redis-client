@@ -102,6 +102,11 @@ public class RedisSubscriptions {
     }
 
     void handle(String channelOrPattern, Reply[] replyData) {
+        if (Vertx.currentContext() == context) {
+            handler.handle(channelOrPattern, replyData);
+            return;
+        }
+        
       context.runOnContext(v -> {
         handler.handle(channelOrPattern, replyData);
       });

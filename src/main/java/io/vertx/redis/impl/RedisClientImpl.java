@@ -876,6 +876,12 @@ public final class RedisClientImpl extends AbstractRedisClient {
     sendLong(PUBLISH, toPayload(channel, message), handler);
     return this;
   }
+  
+  @Override
+  public RedisClient publish(byte[] channel, byte[] message, Handler<AsyncResult<Long>> handler) {
+    sendLong(PUBLISH, toPayload(channel, message), handler);
+    return this;
+  }
 
   @Override
   public RedisClient punsubscribe(List<String> patterns, Handler<AsyncResult<Void>> handler) {
@@ -1185,6 +1191,17 @@ public final class RedisClientImpl extends AbstractRedisClient {
   }
 
   @Override
+  public RedisClient subscribeManyBinary(List<String> channels, Handler<AsyncResult<JsonArray>> handler, MessageHandler messageHandler) {
+      for (String channel : channels) {
+          subscriptions.registerChannelSubscribeHandler(channel, messageHandler);
+      }
+      send(SUBSCRIBE, toPayload(channels), JsonArray.class, true, handler);
+      return this;
+  }
+  
+  
+
+  @Override
   public RedisClient sunion(List<String> keys, Handler<AsyncResult<JsonArray>> handler) {
     sendJsonArray(SUNION, toPayload(keys), handler);
     return this;
@@ -1249,6 +1266,12 @@ public final class RedisClientImpl extends AbstractRedisClient {
     // flip from <String, Double> to <Double, String> when wrapping
     Stream flipped = members.entrySet().stream().map(e -> new Object[]{e.getValue(), e.getKey()});
     sendLong(ZADD, toPayload(key, flipped), handler);
+    return this;
+  }
+  
+  @Override
+  public RedisClient zaddManyUnsafe(Object listOfKeyThenScoreMemberScoreMemberEtc, Handler<AsyncResult<Long>> handler) {
+    sendLong(ZADD, (List)listOfKeyThenScoreMemberScoreMemberEtc, handler);
     return this;
   }
 
@@ -2719,12 +2742,6 @@ public final class RedisClientImpl extends AbstractRedisClient {
       return this;
     }
   
-  @Override
-  public RedisClient zaddManyUnsafe(Object listOfKeyThenScoreMemberScoreMemberEtc, Handler<AsyncResult<Long>> handler) {
-    sendLong(ZADD, (List)listOfKeyThenScoreMemberScoreMemberEtc, handler);
-    return this;
-  }
-
     @Override
     public RedisTransaction zcard(String key, Handler<AsyncResult<String>> handler) {
       sendString(ZCARD, toPayload(key), handler);

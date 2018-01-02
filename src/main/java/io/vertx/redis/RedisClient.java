@@ -24,6 +24,7 @@ import io.vertx.core.Vertx;
 import io.vertx.core.buffer.Buffer;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
+import io.vertx.redis.impl.MessageHandler;
 import io.vertx.redis.impl.RedisClientImpl;
 import io.vertx.redis.op.*;
 
@@ -2119,6 +2120,7 @@ public interface RedisClient {
   @Fluent
   RedisClient subscribeMany(List<String> channels, Handler<AsyncResult<JsonArray>> handler);
 
+  
   /**
    * Add multiple sets
    *
@@ -2832,4 +2834,28 @@ public interface RedisClient {
    */
   @Fluent
   RedisClient zaddManyUnsafe(Object listOfKeyThenScoreMemberScoreMemberEtc, Handler<AsyncResult<Long>> handler);
+  
+  /**
+   * Subscribe to list of channels getting the raw ReplyData directly, not through the EventBus
+   * 
+   * @param channels
+   * @param handler
+   * @param messageHandler
+   * @return
+   */
+  @Fluent
+  @GenIgnore
+  RedisClient subscribeManyBinary(List<String> channels, Handler<AsyncResult<JsonArray>> handler, MessageHandler messageHandler);
+  
+  /**
+   * Post a message to a channel
+   *
+   * @param channel Channel key
+   * @param message Message to send to channel
+   * @param handler Handler for the result of this call.
+   * @since Redis 2.0.0
+   * group: pubsub
+   */
+  @Fluent
+  RedisClient publish(byte[] channel, byte[] message, Handler<AsyncResult<Long>> handler);
 }

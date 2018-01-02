@@ -76,20 +76,23 @@ public abstract class AbstractRedisClient extends BaseRedisClient<RedisCommand> 
 
       case SUBSCRIBE:
         cmd.setExpectedReplies(redisArgs.size());
-
-        for (Object obj : redisArgs) {
-          String channel = (String) obj;
-          // compose the listening address as base + . + channel
-          final String vertxChannel = baseAddress + "." + channel;
-          subscriptions.registerChannelSubscribeHandler(channel, (channel1, replyData) -> {
-            JsonObject replyMessage = new JsonObject();
-            replyMessage.put("status", "ok");
-            JsonObject message = new JsonObject();
-            message.put("channel", channel1);
-            message.put("message", replyData[2].asType(String.class, encoding));
-            replyMessage.put("value", message);
-            eb.send(vertxChannel, replyMessage);
-          });
+        
+        //LR: for binary subscriptions we use caller handler
+        if(!binary) {
+            for (Object obj : redisArgs) {
+              String channel = (String) obj;
+              // compose the listening address as base + . + channel
+              final String vertxChannel = baseAddress + "." + channel;
+              subscriptions.registerChannelSubscribeHandler(channel, (channel1, replyData) -> {
+                JsonObject replyMessage = new JsonObject();
+                replyMessage.put("status", "ok");
+                JsonObject message = new JsonObject();
+                message.put("channel", channel1);
+                message.put("message", replyData[2].asType(String.class, encoding));
+                replyMessage.put("value", message);
+                eb.send(vertxChannel, replyMessage);
+              });
+            }
         }
         pubsub.send(cmd);
         break;

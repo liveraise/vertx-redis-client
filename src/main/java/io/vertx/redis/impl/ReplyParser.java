@@ -59,20 +59,8 @@ public class ReplyParser implements Handler<Buffer> {
         return new Reply(type, _buffer.getString(start, end, _encoding));
       }
     } else if (type == ':') {
-      // up to the delimiter
-      end = packetEndOffset() - 1;
-      start = _offset;
-
-      // include the delimiter
-      _offset = end + 2;
-
-      if (end > _buffer.length()) {
-        _offset = start;
-        throw new IndexOutOfBoundsException("Wait for more data.");
-      }
-
       // return the coerced numeric value
-      return new Reply(type, Long.parseLong(_buffer.getString(start, end)));
+      return new Reply(type, parseNextStringAsLong());
     } else if (type == '$') {
       // set a rewind point, as the packet could be larger than the
       // buffer in memory
@@ -85,8 +73,8 @@ public class ReplyParser implements Handler<Buffer> {
         return new Reply(type, null);
       }
 
-      end = _offset + packetSize;
       start = _offset;
+      end = start + packetSize;
 
       // set the offset to after the delimiter
       _offset = end + 2;
@@ -96,7 +84,7 @@ public class ReplyParser implements Handler<Buffer> {
         throw new IndexOutOfBoundsException("Wait for more data.");
       }
 
-      return new Reply(type, _buffer.getBuffer(start, end));
+      return new Reply(type, Buffer.buffer(end - start).appendBuffer(_buffer, start, end - start));
     } else if (type == '*') {
       offset = _offset;
       packetSize = parsePacketSize();
@@ -208,12 +196,7 @@ public class ReplyParser implements Handler<Buffer> {
   }
 
   private int parsePacketSize() throws IndexOutOfBoundsException {
-    int end = packetEndOffset();
-    String value = _buffer.getString(_offset, end - 1, _encoding);
-
-    _offset = end + 1;
-
-    long size = Long.parseLong(value);
+      long size = parseNextStringAsLong();
 
     if (size > Integer.MAX_VALUE) {
       throw new RuntimeException("Cannot allocate more than " + Integer.MAX_VALUE + " bytes");
@@ -242,6 +225,39 @@ public class ReplyParser implements Handler<Buffer> {
 
     offset++;
     return offset;
+  }
+  
+  private long parseNextStringAsLong() throws IndexOutOfBoundsException {
+      Buffer buf = _buffer;
+      int offset = _offset;
+      boolean isNeg;
+      long value;
+      int b = buf.getByte(offset++);
+      
+      if(b == '-') {
+          isNeg = true;
+          value = 0;
+      } else {
+          isNeg = false;
+          value = b - '0';
+      }
+
+      while (true) {
+        b = buf.getByte(offset++);
+        if (b == '\r') {
+
+          if (buf.getByte(offset++) != '\n') {
+              throw new IndexOutOfBoundsException("didn't see LF after NL reading multi bulk count (" + offset + " => " + _buffer.length() + ", " + _offset + ")");
+          }
+
+          break;
+        } else {
+          value = (value * 10) + b - '0';
+        }
+      }
+      
+      this._offset = offset;
+      return (isNeg ? -value : value);
   }
 
   private int bytesRemaining() {
