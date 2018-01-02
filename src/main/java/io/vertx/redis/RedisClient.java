@@ -1,17 +1,17 @@
 /**
  * Copyright 2015 Red Hat, Inc.
- *
- *  All rights reserved. This program and the accompanying materials
- *  are made available under the terms of the Eclipse Public License v1.0
- *  and Apache License v2.0 which accompanies this distribution.
- *
- *  The Eclipse Public License is available at
- *  http://www.eclipse.org/legal/epl-v10.html
- *
- *  The Apache License v2.0 is available at
- *  http://www.opensource.org/licenses/apache2.0.php
- *
- *  You may elect to redistribute this code under either of these licenses.
+ * <p>
+ * All rights reserved. This program and the accompanying materials
+ * are made available under the terms of the Eclipse Public License v1.0
+ * and Apache License v2.0 which accompanies this distribution.
+ * <p>
+ * The Eclipse Public License is available at
+ * http://www.eclipse.org/legal/epl-v10.html
+ * <p>
+ * The Apache License v2.0 is available at
+ * http://www.opensource.org/licenses/apache2.0.php
+ * <p>
+ * You may elect to redistribute this code under either of these licenses.
  */
 package io.vertx.redis;
 
@@ -739,6 +739,25 @@ public interface RedisClient {
    */
   @Fluent
   RedisClient evalsha(String sha1, List<String> keys, List<String> values, Handler<AsyncResult<JsonArray>> handler);
+
+  /**
+   * Execute a Lua script server side. This method is a high level wrapper around EVAL and EVALSHA
+   * using the latter if possible, falling back to EVAL if the script is not cached by the server yet.
+   * According to Redis documentation, executed scripts are guaranteed to be in the script cache of a
+   * given execution of a Redis instance forever, which means typically the overhead incurred by
+   * optimistically sending EVALSHA is minimal, while improving performance and saving bandwidth
+   * compared to using EVAL every time.
+   *
+   * @see <a href="https://redis.io/commands/eval#script-cache-semantics">Redis - Script cache semantics</a>
+   *
+   * @param script  Lua script and its SHA1 digest
+   * @param keys    List of keys
+   * @param args    List of argument values
+   * @param handler Handler for the result of this call.
+   * group: scripting
+   */
+  @Fluent
+  RedisClient evalScript(Script script, List<String> keys, List<String> args, Handler<AsyncResult<JsonArray>> handler);
 
   /**
    * Determine if a key exists

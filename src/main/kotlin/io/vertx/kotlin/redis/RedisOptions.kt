@@ -32,22 +32,23 @@ import io.vertx.core.net.ProxyOptions
  * will perform the authentication handshake and database selection, however if you don't do this and call [io.vertx.redis.RedisClient]
  * yourself in case of connection failure the client will not be able to perform the correct authentication handshake.
  *
- * @param address  Set the eventbus address prefix for `PUB/SUB`.
+ * @param address  Set the eventbus address prefix for `PUB/SUB`. * @param address address prefix.
  * @param auth  Set the password for authentication at connection time.
- * @param binary  Set the user defined character encoding, e.g.: `iso-8859-1`.
+ * @param binary  Set the user defined character encoding, e.g.: `iso-8859-1`. * @param binary use binary messages
  * @param connectTimeout 
  * @param crlPaths 
  * @param crlValues 
  * @param enabledCipherSuites 
  * @param enabledSecureTransportProtocols 
- * @param encoding  Set the user defined character encoding, e.g.: `iso-8859-1`.
- * @param host  Set the host name where the Redis server is listening.
+ * @param encoding  Set the user defined character encoding, e.g.: `iso-8859-1`. * @param encoding the user character encoding
+ * @param host  Set the host name where the Redis server is listening. * @param host host name
  * @param hostnameVerificationAlgorithm 
  * @param idleTimeout 
  * @param jdkSslEngineOptions 
  * @param keyStoreOptions 
  * @param localAddress 
  * @param logActivity 
+ * @param masterName  Set name of Redis master (used with Sentinel).
  * @param metricsName 
  * @param openSslEngineOptions 
  * @param pemKeyCertOptions 
@@ -60,8 +61,9 @@ import io.vertx.core.net.ProxyOptions
  * @param reconnectAttempts 
  * @param reconnectInterval 
  * @param reuseAddress 
- * @param select  Set the database to select at connection time.
+ * @param select  Set the database to select at connection time. * @param select database id
  * @param sendBufferSize 
+ * @param sentinels  Set the list of Sentinels.
  * @param soLinger 
  * @param ssl 
  * @param tcpKeepAlive 
@@ -92,6 +94,7 @@ fun RedisOptions(
   keyStoreOptions: io.vertx.core.net.JksOptions? = null,
   localAddress: String? = null,
   logActivity: Boolean? = null,
+  masterName: String? = null,
   metricsName: String? = null,
   openSslEngineOptions: io.vertx.core.net.OpenSSLEngineOptions? = null,
   pemKeyCertOptions: io.vertx.core.net.PemKeyCertOptions? = null,
@@ -106,6 +109,7 @@ fun RedisOptions(
   reuseAddress: Boolean? = null,
   select: Int? = null,
   sendBufferSize: Int? = null,
+  sentinels: Iterable<String>? = null,
   soLinger: Int? = null,
   ssl: Boolean? = null,
   tcpKeepAlive: Boolean? = null,
@@ -172,6 +176,9 @@ fun RedisOptions(
   if (logActivity != null) {
     this.setLogActivity(logActivity)
   }
+  if (masterName != null) {
+    this.setMasterName(masterName)
+  }
   if (metricsName != null) {
     this.setMetricsName(metricsName)
   }
@@ -213,6 +220,9 @@ fun RedisOptions(
   }
   if (sendBufferSize != null) {
     this.setSendBufferSize(sendBufferSize)
+  }
+  if (sentinels != null) {
+    this.setSentinels(sentinels.toList())
   }
   if (soLinger != null) {
     this.setSoLinger(soLinger)

@@ -1,29 +1,24 @@
 /**
  * Copyright 2015 Red Hat, Inc.
- *
- *  All rights reserved. This program and the accompanying materials
- *  are made available under the terms of the Eclipse Public License v1.0
- *  and Apache License v2.0 which accompanies this distribution.
- *
- *  The Eclipse Public License is available at
- *  http://www.eclipse.org/legal/epl-v10.html
- *
- *  The Apache License v2.0 is available at
- *  http://www.opensource.org/licenses/apache2.0.php
- *
- *  You may elect to redistribute this code under either of these licenses.
+ * <p>
+ * All rights reserved. This program and the accompanying materials
+ * are made available under the terms of the Eclipse Public License v1.0
+ * and Apache License v2.0 which accompanies this distribution.
+ * <p>
+ * The Eclipse Public License is available at
+ * http://www.eclipse.org/legal/epl-v10.html
+ * <p>
+ * The Apache License v2.0 is available at
+ * http://www.opensource.org/licenses/apache2.0.php
+ * <p>
+ * You may elect to redistribute this code under either of these licenses.
  */
 package io.vertx.test.redis;
 
-import io.vertx.core.eventbus.Message;
-import io.vertx.core.json.JsonObject;
-import io.vertx.redis.RedisClient;
+import io.vertx.redis.Script;
 import org.junit.Test;
 
-import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.List;
-import java.util.concurrent.atomic.AtomicInteger;
 
 public class EvalTest extends AbstractRedisClientBase {
 
@@ -79,6 +74,21 @@ public class EvalTest extends AbstractRedisClientBase {
         redis.evalsha("6b1bf486c81ceb7edf3c093f4c48582e38c0e791", null, null, res2 -> {
           assertTrue(res1.succeeded());
           // expect "bar"
+          testComplete();
+        });
+      });
+    });
+    await();
+  }
+
+  @Test
+  public void test6() {
+    redis.scriptFlush(res -> {
+      assertTrue(res.succeeded());
+      redis.evalScript(Script.create("return 1"), null, null, res1 -> {
+        assertTrue(res1.succeeded());
+        redis.evalScript(Script.create("return 1"), null, null, res2 -> {
+          assertTrue(res2.succeeded());
           testComplete();
         });
       });

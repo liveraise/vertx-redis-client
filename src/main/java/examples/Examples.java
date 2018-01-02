@@ -5,6 +5,7 @@ import io.vertx.core.json.JsonObject;
 import io.vertx.redis.RedisClient;
 import io.vertx.redis.RedisOptions;
 import io.vertx.redis.RedisTransaction;
+import io.vertx.redis.Script;
 
 /**
  * These are the examples used in the documentation.
@@ -15,7 +16,7 @@ public class Examples {
 
   public void example1(Vertx vertx) {
     RedisOptions config = new RedisOptions()
-        .setHost("127.0.0.1");
+      .setHost("127.0.0.1");
 
     RedisClient redis = RedisClient.create(vertx, config);
   }
@@ -45,9 +46,9 @@ public class Examples {
     RedisClient redis = RedisClient.create(vertx, new RedisOptions());
 
     redis.subscribe("channel1", res -> {
-        if (res.succeeded()) {
-            // so something...
-        }
+      if (res.succeeded()) {
+        // so something...
+      }
     });
   }
 
@@ -56,9 +57,9 @@ public class Examples {
     RedisClient redis = RedisClient.create(vertx, new RedisOptions());
 
     redis.publish("channel1", "Hello World!", res -> {
-        if (res.succeeded()) {
-            // so something...
-        }
+      if (res.succeeded()) {
+        // so something...
+      }
     });
   }
 
@@ -74,6 +75,17 @@ public class Examples {
           });
         }
       });
+    });
+  }
+
+  public void example6() {
+    RedisClient client = RedisClient.create(Vertx.vertx(), new RedisOptions().setAddress("127.0.0.1").setPort(6379));
+    client.evalScript(Script.create("return 42"), null, null, res -> {
+      if (res.succeeded()) {
+        System.out.println(res.result().getInteger(0));
+      } else {
+        System.err.println(res.cause());
+      }
     });
   }
 }

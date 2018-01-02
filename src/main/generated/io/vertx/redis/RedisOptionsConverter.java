@@ -42,11 +42,20 @@ public class RedisOptionsConverter {
     if (json.getValue("host") instanceof String) {
       obj.setHost((String)json.getValue("host"));
     }
+    if (json.getValue("masterName") instanceof String) {
+      obj.setMasterName((String)json.getValue("masterName"));
+    }
     if (json.getValue("port") instanceof Number) {
       obj.setPort(((Number)json.getValue("port")).intValue());
     }
     if (json.getValue("select") instanceof Number) {
       obj.setSelect(((Number)json.getValue("select")).intValue());
+    }
+    if (json.getValue("sentinels") instanceof JsonArray) {
+      json.getJsonArray("sentinels").forEach(item -> {
+        if (item instanceof String)
+          obj.addSentinel((String)item);
+      });
     }
   }
 
@@ -64,9 +73,17 @@ public class RedisOptionsConverter {
     if (obj.getHost() != null) {
       json.put("host", obj.getHost());
     }
+    if (obj.getMasterName() != null) {
+      json.put("masterName", obj.getMasterName());
+    }
     json.put("port", obj.getPort());
     if (obj.getSelect() != null) {
       json.put("select", obj.getSelect());
+    }
+    if (obj.getSentinels() != null) {
+      JsonArray array = new JsonArray();
+      obj.getSentinels().forEach(item -> array.add(item));
+      json.put("sentinels", array);
     }
   }
 }
