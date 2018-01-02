@@ -2616,6 +2616,12 @@ public final class RedisClientImpl extends AbstractRedisClient {
     sendLong(ZADD, toPayload(key, flipped), handler);
     return this;
   }
+  
+  @Override
+  public RedisClient zaddManyUnsafe(Object listOfKeyThenScoreMemberScoreMemberEtc, Handler<AsyncResult<Long>> handler) {
+    sendLong(ZADD, (List)listOfKeyThenScoreMemberScoreMemberEtc, handler);
+    return this;
+  }
 
   @Override
   public RedisClient zcard(String key, Handler<AsyncResult<Long>> handler) {

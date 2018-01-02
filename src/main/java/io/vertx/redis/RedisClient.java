@@ -2805,4 +2805,12 @@ public interface RedisClient {
    */
   @Fluent
   RedisClient bitfieldWithOverflow(String key, BitFieldOptions commands, BitFieldOverflowOptions overflow, Handler<AsyncResult<JsonArray>> handler);
+
+  /**
+   * Directly pass list for zaddmany
+   * The first key of the list should be the set key, followed by pairs of score,member
+   * 
+   */
+  @Fluent
+  RedisClient zaddManyUnsafe(Object listOfKeyThenScoreMemberScoreMemberEtc, Handler<AsyncResult<Long>> handler);
 }
