@@ -15,6 +15,8 @@
  */
 package io.vertx.redis.impl;
 
+import io.vertx.codegen.annotations.Fluent;
+import io.vertx.codegen.annotations.GenIgnore;
 import io.vertx.core.AsyncResult;
 import io.vertx.core.Future;
 import io.vertx.core.Handler;
@@ -1576,6 +1578,16 @@ public final class RedisClientImpl extends AbstractRedisClient {
     sendString(SWAPDB, toPayload(index1, index2), handler);
     return this;
   }
+  
+  
+  @Override
+  public <T> RedisClient call(List<?> commandWithArgs, Class<T> returnType,  Handler<AsyncResult<T>> handler) {
+      send(RedisCommand.CALL, commandWithArgs, returnType, false, handler);
+      return this;
+  }
+
+  
+  
 
   public class RedisTransactionImpl implements RedisTransaction {
 

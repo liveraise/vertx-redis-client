@@ -2867,11 +2867,14 @@ public interface RedisClient {
    * group: pubsub
    */
   @Fluent
+  @GenIgnore
   RedisClient publish(byte[] channel, byte[] message, Handler<AsyncResult<Long>> handler);
 
   
   
-  
+  @Fluent
+  @GenIgnore
+  <T> RedisClient call(List<?> commandWithArgs, Class<T> returnType,  Handler<AsyncResult<T>> handler);
   
   
   

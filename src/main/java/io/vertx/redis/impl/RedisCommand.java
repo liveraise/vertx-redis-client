@@ -217,12 +217,16 @@ public enum RedisCommand implements AbstractCommand {
   SCRIPT_DEBUG("SCRIPT DEBUG"),
   TOUCH("TOUCH"),
   UNLINK("UNLINK"),
-  SWAPDB("SWAPDB");
+  SWAPDB("SWAPDB"),
+  
+  
+  CALL(null)
+  
+  ;
 
   private final String[] tokens;
-
   RedisCommand(String command) {
-    this.tokens = command.split(" ");
+    this.tokens = command == null ? new String[0] : command.split(" ");
   }
 
   public String[] getTokens() {
