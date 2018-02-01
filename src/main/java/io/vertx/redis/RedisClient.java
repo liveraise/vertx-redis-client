@@ -2874,9 +2874,25 @@ public interface RedisClient {
   
   @Fluent
   @GenIgnore
-  <T> RedisClient call(List<?> commandWithArgs, Class<T> returnType,  Handler<AsyncResult<T>> handler);
+  RedisClient callLong(List<?> commandWithArgs, Handler<AsyncResult<Long>> handler);
   
+  @Fluent
+  @GenIgnore
+  RedisClient callVoid(List<?> commandWithArgs, Handler<AsyncResult<Void>> handler);
   
+  @Fluent
+  @GenIgnore
+  RedisClient callString(List<?> commandWithArgs, Handler<AsyncResult<String>> handler);
+  
+  @Fluent
+  @GenIgnore
+  RedisClient callArray(List<?> commandWithArgs, Handler<AsyncResult<JsonArray>> handler);
+  
+  @Fluent
+  @GenIgnore
+  RedisClient callHash(List<?> commandWithArgs, Handler<AsyncResult<JsonObject>> handler);
+  
+
   
   /**
    * Delete a key asynchronously in another thread. Otherwise it is just as DEL, but non blocking.

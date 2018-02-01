@@ -1578,15 +1578,36 @@ public final class RedisClientImpl extends AbstractRedisClient {
     sendString(SWAPDB, toPayload(index1, index2), handler);
     return this;
   }
-  
-  
+
   @Override
-  public <T> RedisClient call(List<?> commandWithArgs, Class<T> returnType,  Handler<AsyncResult<T>> handler) {
-      send(RedisCommand.CALL, commandWithArgs, returnType, false, handler);
-      return this;
+  public RedisClient callLong(List<?> commandWithArgs, Handler<AsyncResult<Long>> handler) {
+      sendLong(RedisCommand.CALL, commandWithArgs, handler);
+      return this;      
   }
 
-  
+  @Override
+  public RedisClient callVoid(List<?> commandWithArgs, Handler<AsyncResult<Void>> handler) {
+      sendVoid(RedisCommand.CALL, commandWithArgs, handler);
+      return this;      
+  }
+
+  @Override
+  public RedisClient callString(List<?> commandWithArgs, Handler<AsyncResult<String>> handler) {
+      sendString(RedisCommand.CALL, commandWithArgs, handler);
+      return this;      
+  }
+
+  @Override
+  public RedisClient callArray(List<?> commandWithArgs, Handler<AsyncResult<JsonArray>> handler) {
+      sendJsonArray(RedisCommand.CALL, commandWithArgs, handler);
+      return this;      
+  }
+
+  @Override
+  public RedisClient callHash(List<?> commandWithArgs, Handler<AsyncResult<JsonObject>> handler) {
+      sendJsonObject(RedisCommand.CALL, commandWithArgs, handler);
+      return this;      
+  }
   
 
   public class RedisTransactionImpl implements RedisTransaction {
