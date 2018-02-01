@@ -230,8 +230,12 @@ public class ReplyParser implements Handler<Buffer> {
   private long parseNextStringAsLong() throws IndexOutOfBoundsException {
       Buffer buf = _buffer;
       int offset = _offset;
+      int bufLen = _buffer.length();
       boolean isNeg;
       long value;
+      if (offset + 2 >= bufLen) {
+          throw new IndexOutOfBoundsException("Not enough data."); //must have number\r\n
+      }
       int b = buf.getByte(offset++);
       
       if(b == '-') {
@@ -243,17 +247,18 @@ public class ReplyParser implements Handler<Buffer> {
       }
 
       while (true) {
-        b = buf.getByte(offset++);
-        if (b == '\r') {
-
-          if (buf.getByte(offset++) != '\n') {
-              throw new IndexOutOfBoundsException("didn't see LF after NL reading multi bulk count (" + offset + " => " + _buffer.length() + ", " + _offset + ")");
+          if (offset + 1 >= bufLen) {
+              throw new IndexOutOfBoundsException("Not enough data.");
           }
-
-          break;
-        } else {
-          value = (value * 10) + b - '0';
-        }
+          b = buf.getByte(offset++);
+          if (b == '\r') {
+              if (buf.getByte(offset++) != '\n') {
+                  throw new IndexOutOfBoundsException("didn't see LF after NL reading multi bulk count (" + offset + " => " + _buffer.length() + ", " + _offset + ")");
+              }
+              break;
+          } else {
+              value = (value * 10) + b - '0';
+          }
       }
       
       this._offset = offset;
