@@ -1,5 +1,5 @@
 /*
- * Copyright 2014 Red Hat, Inc.
+ * Copyright (c) 2014 Red Hat, Inc. and others
  *
  * Red Hat licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
@@ -36,6 +36,12 @@ public class RedisOptionsConverter {
     if (json.getValue("binary") instanceof Boolean) {
       obj.setBinary((Boolean)json.getValue("binary"));
     }
+    if (json.getValue("domainSocket") instanceof Boolean) {
+      obj.setDomainSocket((Boolean)json.getValue("domainSocket"));
+    }
+    if (json.getValue("domainSocketAddress") instanceof String) {
+      obj.setDomainSocketAddress((String)json.getValue("domainSocketAddress"));
+    }
     if (json.getValue("encoding") instanceof String) {
       obj.setEncoding((String)json.getValue("encoding"));
     }
@@ -52,10 +58,12 @@ public class RedisOptionsConverter {
       obj.setSelect(((Number)json.getValue("select")).intValue());
     }
     if (json.getValue("sentinels") instanceof JsonArray) {
-      json.getJsonArray("sentinels").forEach(item -> {
+      java.util.ArrayList<java.lang.String> list = new java.util.ArrayList<>();
+      json.getJsonArray("sentinels").forEach( item -> {
         if (item instanceof String)
-          obj.addSentinel((String)item);
+          list.add((String)item);
       });
+      obj.setSentinels(list);
     }
   }
 
@@ -67,6 +75,10 @@ public class RedisOptionsConverter {
       json.put("auth", obj.getAuth());
     }
     json.put("binary", obj.isBinary());
+    json.put("domainSocket", obj.isDomainSocket());
+    if (obj.getDomainSocketAddress() != null) {
+      json.put("domainSocketAddress", obj.getDomainSocketAddress());
+    }
     if (obj.getEncoding() != null) {
       json.put("encoding", obj.getEncoding());
     }

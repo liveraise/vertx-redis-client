@@ -772,6 +772,16 @@ public interface RedisClient {
   RedisClient exists(String key, Handler<AsyncResult<Long>> handler);
 
   /**
+   * Determine if one or many keys exist
+   * @param keys    List of key strings
+   * @param handler Handler for the result of this call.
+   * @since Redis 3.0.3
+   * group: generic
+   */
+  @Fluent
+  RedisClient existsMany(List<String> keys, Handler<AsyncResult<Long>> handler);
+
+  /**
    * Set a key's time to live in seconds
    *
    * @param key     Key string
@@ -2858,4 +2868,44 @@ public interface RedisClient {
    */
   @Fluent
   RedisClient publish(byte[] channel, byte[] message, Handler<AsyncResult<Long>> handler);
+
+  
+  
+  
+  
+  
+  
+  /**
+   * Delete a key asynchronously in another thread. Otherwise it is just as DEL, but non blocking.
+   *
+   * @param key     Key to delete
+   * @param handler Handler for the result of this call.
+   * @since Redis 4.0.0
+   * group: generic
+   */
+  @Fluent
+  RedisClient unlink(String key, Handler<AsyncResult<Long>> handler);
+
+  /**
+   * Delete multiple keys asynchronously in another thread. Otherwise it is just as DEL, but non blocking.
+   *
+   * @param keys    List of keys to delete
+   * @param handler Handler for the result of this call.
+   * @since Redis 4.0.0
+   * group: generic
+   */
+  @Fluent
+  RedisClient unlinkMany(List<String> keys, Handler<AsyncResult<Long>> handler);
+
+  /**
+   * Swaps two Redis databases
+   *
+   * @param index1  index of first database to swap
+   * @param index2  index of second database to swap
+   * @param handler Handler for the result of this call.
+   * @since Redis 4.0.0
+   * group: connection
+   */
+  @Fluent
+  RedisClient swapdb(int index1, int index2, Handler<AsyncResult<String>> handler);
 }

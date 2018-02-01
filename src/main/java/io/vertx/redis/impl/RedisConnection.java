@@ -15,7 +15,11 @@
  */
 package io.vertx.redis.impl;
 
-import io.vertx.core.*;
+import io.vertx.core.AsyncResult;
+import io.vertx.core.Context;
+import io.vertx.core.Future;
+import io.vertx.core.Handler;
+import io.vertx.core.Vertx;
 import io.vertx.core.impl.VertxInternal;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
@@ -23,10 +27,15 @@ import io.vertx.core.logging.Logger;
 import io.vertx.core.logging.LoggerFactory;
 import io.vertx.core.net.NetClient;
 import io.vertx.core.net.NetSocket;
+import io.vertx.core.net.SocketAddress;
 import io.vertx.redis.RedisOptions;
 
 import java.nio.charset.Charset;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Queue;
 import java.util.concurrent.atomic.AtomicReference;
 
 /**
@@ -120,19 +129,16 @@ class RedisConnection {
   private boolean useSentinel() {
     // in case the user has disconnected before, update the state
     reconnect = true;
-    if (config.getSentinels() != null && config.getSentinels().size() > 0 && config.getMasterName() != null) {
-      return true;
-    } else {
-      return false;
-    }
+    return config.getSentinels() != null && config.getSentinels().size() > 0 && config.getMasterName() != null;
   }
 
-  private void connect(String host, int port, boolean checkMaster) {
+  private void connect(SocketAddress socketAddress, boolean checkMaster) {
     replyParser.reset();
 // create a netClient for the connection
     final NetClient client = vertx.createNetClient(config);
-    client.connect(port, host, asyncResult -> {
+    client.connect(socketAddress, asyncResult -> {
       if (asyncResult.failed()) {
+        client.close();
         if (state.compareAndSet(State.CONNECTING, State.ERROR)) {
           // clean up any waiting command
           clearQueue(waiting, asyncResult.cause());
@@ -187,7 +193,7 @@ class RedisConnection {
           resolver.getMasterAddressByName(jsonObjectAsyncResult -> {
             if (jsonObjectAsyncResult.succeeded()) {
               JsonObject masterAddress = jsonObjectAsyncResult.result();
-              connect(masterAddress.getString("host"), masterAddress.getInteger("port"), true);
+              connect(SocketAddress.inetSocketAddress(masterAddress.getInteger("port"), masterAddress.getString("host")), true);
             } else {
               // clean up any waiting command
               clearQueue(waiting, jsonObjectAsyncResult.cause());
@@ -199,7 +205,14 @@ class RedisConnection {
             resolver.close();
           });
         } else {
-          connect(config.getHost(), config.getPort(), false);
+          // if the domain socket option is enabled, use the domain socket address to connect to redis server
+          SocketAddress socketAddress;
+          if (config.isDomainSocket()) {
+            socketAddress = SocketAddress.domainSocketAddress(config.getDomainSocketAddress());
+          } else {
+            socketAddress = SocketAddress.inetSocketAddress(config.getPort(), config.getHost());
+          }
+          connect(socketAddress, false);
         }
       });
     }
@@ -214,7 +227,7 @@ class RedisConnection {
       case CONNECTED:
         final Command<Void> cmd = new Command<>(context, RedisCommand.QUIT, null, Charset.defaultCharset(), ResponseTransform.NONE, Void.class);
 
-        cmd.handler(v -> {
+        cmd.handler(ar -> {
           // at this we force the state to error so any incoming command will not start a connection
           if (state.compareAndSet(State.CONNECTED, State.ERROR)) {
             // clean up any waiting command
@@ -224,8 +237,8 @@ class RedisConnection {
 
             netSocket.close();
 
-            closeHandler.handle(Future.succeededFuture());
           }
+          closeHandler.handle(Future.succeededFuture());
         });
 
         send(cmd);

@@ -130,6 +130,7 @@ public abstract class RedisClientTestBase extends VertxTestBase {
     return result;
   }
 
+  @SafeVarargs
   private static <T> List<T> toList(final T... params) {
     return Arrays.asList(params);
   }
@@ -160,11 +161,11 @@ public abstract class RedisClientTestBase extends VertxTestBase {
 
       redis.append(key, "Hello", reply1 -> {
         assertTrue(reply1.succeeded());
-        assertEquals(5l, reply1.result().longValue());
+        assertEquals(5L, reply1.result().longValue());
 
         redis.append(key, " World", reply2 -> {
           assertTrue(reply2.succeeded());
-          assertEquals(11l, reply2.result().longValue());
+          assertEquals(11L, reply2.result().longValue());
 
           redis.get(key, reply3 -> {
             assertTrue(reply3.succeeded());
@@ -462,7 +463,7 @@ public abstract class RedisClientTestBase extends VertxTestBase {
         assertTrue(reply2.succeeded());
         redis.dbsize(reply3 -> {
           assertTrue(reply3.succeeded());
-          assertEquals(Long.valueOf(size + 1l), reply3.result());
+          assertEquals(Long.valueOf(size + 1L), reply3.result());
           testComplete();
         });
       });
@@ -675,9 +676,7 @@ public abstract class RedisClientTestBase extends VertxTestBase {
       assertTrue(reply.succeeded());
       transaction.set("multi-key", "first", reply2 -> {
         assertTrue(reply2.succeeded());
-        transaction.set("multi-key2", "second", reply3 -> {
-          assertTrue(reply3.succeeded());
-        });
+        transaction.set("multi-key2", "second", reply3 -> assertTrue(reply3.succeeded()));
         transaction.get("multi-key", reply4 -> {
           assertTrue(reply4.succeeded());
           assertTrue("QUEUED".equalsIgnoreCase(reply4.result()));
@@ -709,6 +708,29 @@ public abstract class RedisClientTestBase extends VertxTestBase {
         });
       });
     });
+    await();
+  }
+
+  // Require a more recent version of Redis
+  @Ignore
+  @Test
+  public void testExistsMany() {
+    String key1 = makeKey();
+    String key2 = makeKey();
+    redis.set(key1, "Hello", onSuccess(reply0 -> {
+      redis.existsMany(toList(key1, key2), onSuccess(reply1 -> {
+        assertEquals(1, reply1.longValue());
+        redis.set(key2, "Hello", onSuccess(reply2 -> {
+          redis.existsMany(toList(key1, key2), onSuccess(reply3 -> {
+            assertEquals(2, reply3.longValue());
+            redis.existsMany(toList(key1), onSuccess(reply4 -> {
+              assertEquals(1, reply4.longValue());
+              testComplete();
+            }));
+          }));
+        }));
+      }));
+    }));
     await();
   }
 
@@ -1608,9 +1630,7 @@ public abstract class RedisClientTestBase extends VertxTestBase {
             server.stop();
           } catch (Exception ignore) {
           }
-          rdx.close(reply4 -> {
-            assertTrue(reply4.succeeded());
-          });
+          rdx.close(reply4 -> assertTrue(reply4.succeeded()));
           testComplete();
         });
       });
@@ -1695,9 +1715,7 @@ public abstract class RedisClientTestBase extends VertxTestBase {
         assertTrue(reply.succeeded());
         transaction.set(makeKey(), "0", reply2 -> {
           assertTrue(reply2.succeeded());
-          transaction.set(makeKey(), "0", reply3 -> {
-            assertTrue(reply3.succeeded());
-          });
+          transaction.set(makeKey(), "0", reply3 -> assertTrue(reply3.succeeded()));
           transaction.exec(reply4 -> {
             assertTrue(reply4.succeeded());
             testComplete();
@@ -2241,7 +2259,7 @@ public abstract class RedisClientTestBase extends VertxTestBase {
         assertEquals(3, reply1.result().longValue());
         redis.sdiffstore(mykey, mykey1, toList(mykey2), reply2 -> {
           assertTrue(reply2.succeeded());
-          Long diff = reply2.result().longValue();
+          Long diff = reply2.result();
           assertTrue(diff == 2);
           redis.smembers(mykey, reply3 -> {
             Set<String> expected = new HashSet(toList("a", "b"));
@@ -2875,7 +2893,7 @@ public abstract class RedisClientTestBase extends VertxTestBase {
 
             rdx.incr(key, reply1 -> {
               assertTrue(reply1.succeeded());
-              assertEquals(Long.valueOf(1l), reply1.result());
+              assertEquals(Long.valueOf(1L), reply1.result());
 
               transaction.incr(key, reply5 -> {
                 assertTrue(reply5.succeeded());
@@ -3278,7 +3296,7 @@ public abstract class RedisClientTestBase extends VertxTestBase {
     }
     redis.hmset(key, new JsonObject(obj), reply0 -> {
       assertTrue(reply0.succeeded());
-      assertEquals("OK", reply0.result().toString());
+      assertEquals("OK", reply0.result());
       redis.hscan(key, "0", new ScanOptions().setMatch("field1*"), reply1 -> {
         assertTrue(String.valueOf(reply1.cause()), reply1.succeeded());
         JsonArray result = reply1.result();
@@ -3367,7 +3385,7 @@ public abstract class RedisClientTestBase extends VertxTestBase {
     redis.rpushMany(list1, toList("a", "b", "c"), reply0 -> {
       assertTrue(reply0.succeeded());
 
-      assertEquals(3l, reply0.result().longValue());
+      assertEquals(3L, reply0.result().longValue());
 
       redis.brpopMany(toList(list1, list2), 0, reply1 -> {
         assertTrue(reply1.succeeded());
@@ -3400,7 +3418,7 @@ public abstract class RedisClientTestBase extends VertxTestBase {
     final String key = makeKey();
     redis.saddMany(key, toList("1", "2", "3", "foo", "bar", "feelsgood"), reply1 -> {
       assertTrue(reply1.succeeded());
-      assertEquals(6l, reply1.result().longValue());
+      assertEquals(6L, reply1.result().longValue());
       redis.sscan(key, "0", new ScanOptions().setMatch("f*"), reply2 -> {
         assertTrue(reply2.succeeded());
         assertEquals("0", reply2.result().getString(0));
